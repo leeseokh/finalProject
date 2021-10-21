@@ -1,0 +1,5 @@
+package kr.or.ddit.common.reply.service.impl;
+
+public class ReplyServiceImpl {
+
+}

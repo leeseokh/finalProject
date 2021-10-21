@@ -1,0 +1,10 @@
+package kr.or.ddit.common.login.mapper;
+
+import kr.or.ddit.common.login.vo.MemberVO;
+
+public interface LoginMapper {
+
+	MemberVO login(MemberVO memberVo);
+
+
+}

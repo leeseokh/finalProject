@@ -1,0 +1,49 @@
+package kr.or.ddit.professor.lecture.vo;
+
+import java.util.List;
+
+public class LectureTimeVO {
+	
+	//xml의 foreach collection에 들어갈 변수
+	private String dayCode;
+	private String period;
+	
+	private List<LectureTimeVO> lectureTimeVO;
+
+	
+	
+	
+	@Override
+	public String toString() {
+		return "LectureTimeVO [dayCode=" + dayCode + ", period=" + period + ", lectureTimeVO=" + lectureTimeVO + "]";
+	}
+
+	public String getDayCode() {
+		return dayCode;
+	}
+
+	public void setDayCode(String dayCode) {
+		this.dayCode = dayCode;
+	}
+
+	public String getPeriod() {
+		return period;
+	}
+
+	public void setPeriod(String period) {
+		this.period = period;
+	}
+
+	public List<LectureTimeVO> getLectureTimeVO() {
+		return lectureTimeVO;
+	}
+
+	public void setLectureTimeVO(List<LectureTimeVO> lectureTimeVO) {
+		this.lectureTimeVO = lectureTimeVO;
+	}
+	
+	
+
+	
+	
+}

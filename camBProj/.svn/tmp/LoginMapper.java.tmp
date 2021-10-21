@@ -1,0 +1,24 @@
+package kr.or.ddit.common.login.mapper;
+
+<<<<<<< .mine
+
+
+import egovframework.rte.psl.dataaccess.mapper.Mapper;
+||||||| .r187045
+=======
+import egovframework.rte.psl.dataaccess.mapper.Mapper;
+>>>>>>> .r187080
+import kr.or.ddit.common.login.vo.MemberVO;
+
+<<<<<<< .mine
+@Mapper("loginMapper")
+||||||| .r187045
+=======
+@Mapper("login")
+>>>>>>> .r187080
+public interface LoginMapper {
+
+	MemberVO login(MemberVO memberVo);
+
+
+}

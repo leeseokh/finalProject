@@ -1,0 +1,97 @@
+package kr.or.ddit.student.tuitionPayment.controller;
+
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpSession;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import egovframework.rte.ptl.mvc.tags.ui.pagination.PaginationInfo;
+import kr.or.ddit.common.login.vo.MemberVO;
+import kr.or.ddit.student.tuitionPayment.service.TuitionPaymentService;
+import kr.or.ddit.student.tuitionPayment.vo.TuitionPaymentVO;
+
+/**
+ * - 스케쥴러 사용 : DB에서 가져온 값으로 cron 값 변경할 수 있는 방법은?
+ * @author PC-08
+ *
+ */
+@Controller
+public class TuitionPaymentController {
+	
+	@Autowired
+	TuitionPaymentService tuitionPaymentService;
+	
+	/**
+	 * 스케쥴러 테스트
+	 */
+	@Scheduled(cron = "30 51 15 24 9 *")
+	public void test() {
+		System.out.println(new Date());
+	}
+	
+	/**
+	 * 일정 날짜가 되면 등록금 고지서 insert 
+	 */
+	@Scheduled(cron = "30 51 15 24 9 *")
+	public void tuitionPaymentInsert() {
+		tuitionPaymentService.tuitionPaymentInsert();
+	}
+	
+	/**
+	 * 등록금 내역 조회
+	 */
+	@RequestMapping(value = "/student/tuitionPayment/tuitionPaymentList")
+	public String tuitionPaymentList(@ModelAttribute TuitionPaymentVO tuitionPaymentVo
+												    , HttpSession session
+												    , Model model) {
+		// 사용자 정보 가져오기
+		MemberVO memberVo = (MemberVO) session.getAttribute("memberVo");
+		tuitionPaymentVo.setStdId(memberVo.getMemId());
+		// 페이징 처리
+		PaginationInfo paginationInfo = tuitionPaymentService.getPaginationInfo(tuitionPaymentVo);
+		model.addAttribute("paginationInfo", paginationInfo);
+		// 리스트 가져오기
+		List<TuitionPaymentVO> tuitionPaymentList = tuitionPaymentService.tuitionPaymentList(tuitionPaymentVo, paginationInfo);
+		model.addAttribute("tuitionPaymentList", tuitionPaymentList);
+		
+		return "/student/tuitionPayment/tuitionPaymentList";
+	}
+	
+	/**
+	 * ajax : 등록금 납부 고지서 조회 모달에 값 전달
+	 * Map : 학생vo, 장학금vo, 등록금vo
+	 */
+	@ResponseBody
+	@RequestMapping(value = "/student/tuitionPayment/tuitionPaymentBillDetail", produces = "application/json; charset=utf8")
+	public Map<String, Object> tuitionPaymentBillDetail(@RequestBody TuitionPaymentVO tuitionPaymentVo
+														    , HttpSession session
+														    , Model model) {
+		// 사용자 정보 가져오기
+		MemberVO memberVo = (MemberVO) session.getAttribute("memberVo");
+		tuitionPaymentVo.setStdId(memberVo.getMemId());
+		
+		// 학생vo, 장학금vo, 등록금vo 가져오기
+		Map<String, Object> map = tuitionPaymentService.tuitionPaymentBillDetail(tuitionPaymentVo);
+		return map;
+	}
+	
+	/**
+	 * 등록금 납부되었으면 업데이트
+	 * - 가상계좌 입금을 어떻게 확인하고 업데이트해주지? 스케줄러?
+	 * - rgst_sem + 1 해주기
+	 */
+	@Scheduled(cron = "0 * * * * *") // 1분 주기
+	public void tuitionPaymentUpdate() {
+//		tuitionPaymentService.tuitionPaymentUpdate();
+	}
+}

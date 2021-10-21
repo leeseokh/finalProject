@@ -1,0 +1,125 @@
+package kr.or.ddit.common.login.controller;
+
+import java.io.UnsupportedEncodingException;
+import java.security.NoSuchAlgorithmException;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.servlet.ModelAndView;
+
+import kr.or.ddit.common.login.vo.MemberVO;
+import kr.or.ddit.util.CryptoUtil.CryptoUtil;
+import kr.or.ddit.common.login.service.LoginService;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+
+@Controller
+public class LoginController {
+
+	private Logger logger = LoggerFactory.getLogger(this.getClass());
+
+	@Autowired
+	private LoginService loginService;
+
+	@RequestMapping(value = "/login", method = RequestMethod.GET)
+	public String login() {
+		return "/common/login";
+	}
+	
+//	public String errorIncrease(@ModelAttribute MemberVO memberVo, HttpServletRequest request) {
+//		request.setAttribute("msg", "errorCnt");
+//		
+//		int errorCnt = this.loginService.errorCnt(memberVo);
+//		
+//	return login();
+//	}
+	
+	@RequestMapping(value = "/login", method = RequestMethod.POST)
+	public String loginPost(@ModelAttribute MemberVO memberVo, HttpServletRequest request, HttpSession session) throws Exception {
+
+		logger.info("로그인 시작");
+		logger.info(memberVo.getMemId());
+		logger.info(memberVo.getPwd()); // 비번으로 입력한 값
+		
+		logger.info("받아온 멤버VO >> " + memberVo); 
+		String userInputPwd = memberVo.getPwd(); // JSP에서 입력받은 값
+		logger.info("JSP에서 입력받은 값 >> " + userInputPwd); // 비번으로 입력한 값
+		
+		String loginPwd = CryptoUtil.sha512(memberVo.getPwd());
+		logger.info("DB와 비교하기위해 암호화 >> " + loginPwd); // 비번으로 입력한 값을 DB와 비교하기위해 암호화함
+		
+		
+		memberVo.setPwd(loginPwd);
+		logger.info("비번가공후 멤버VO >> " + memberVo); 
+
+		MemberVO memberVo2 = this.loginService.login(memberVo);
+		logger.info("로그인 시도를 한 VO >> " + memberVo2); 
+		
+		int result = this.loginService.loginCnt(memberVo);
+		
+		
+		// 비밀번호 유효성
+
+		/* MemberVO firstLogin = this.loginService.selectFirstLogin(memberVo); */
+		
+//		if (memberVo2 == null) {
+//			request.setAttribute("msg", "fail");
+//			return "/common/login";
+//		}
+		
+		if (result < 1) {
+			
+			logger.info("기존 에: " + errorCnt);
+			
+			memberVo.setPwdErrCnt(memberVo.getPwdErrCnt()+1);
+			
+			int errorCnt = this.loginService.errorCnt(memberVo);
+			logger.info("errorCnt : " + errorCnt);
+			request.setAttribute("msg", "lock");
+			return login();
+		}
+		
+				
+		if (memberVo2.getDelYn().equals("Y")) {
+			request.setAttribute("msg", "delete");
+			return login();
+		}
+			
+		logger.info("memTypeCode : " + memberVo2.getMemTypeCode());
+
+		if (memberVo2.getMemTypeCode().equals("01")) {
+			request.getSession().setAttribute("student", memberVo2.getMemTypeCode());
+		}
+		if (memberVo2.getMemTypeCode().equals("02")) {
+			request.getSession().setAttribute("professor", memberVo2.getMemTypeCode());
+		}
+		if (memberVo2.getMemTypeCode().equals("03")) {
+			request.getSession().setAttribute("admin", memberVo2.getMemTypeCode());
+		}
+
+		logger.info(memberVo2.getName());
+		request.getSession().setAttribute("memberVo", memberVo2);
+		logger.info("로그인 세선 적용 성공");
+		return "redirect:/common/faq/faqList";
+	}
+
+	// 로그아웃
+	@RequestMapping(value = "/logout", method = RequestMethod.GET)
+	public ModelAndView logout(HttpSession session) {
+
+		session.invalidate();
+		ModelAndView mav = new ModelAndView("redirect:/common/faq/faqList");
+
+		return mav;
+	}
+
+}

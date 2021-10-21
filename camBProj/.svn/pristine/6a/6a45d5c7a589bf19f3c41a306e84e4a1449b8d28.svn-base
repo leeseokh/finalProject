@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.or.ddit.common.faq.mapper.FaqMapper">
+
+	<!-- 전체조회 -->
+	<select id="faqList" parameterType="hashMap" resultType="kr.or.ddit.common.faq.vo.FaqVO">
+		SELECT t.* 
+			FROM (SELECT ROW_NUMBER() OVER (ORDER BY ARTC_NUM DESC) rnum
+				,ARTC_NUM
+				,EMP_ID
+				,TITLE
+				,CONTENT
+				,FAQ_KWD_CODE
+				,WRITE_DATE
+				,FILE_GR_NUM
+				,MOD_DATE
+			FROM FAQ
+			WHERE 1 = 1
+				<if test="search !='' and search.equals('title')">
+					AND TITLE LIKE '%' || #{keyword} || '%'
+				</if>
+				<if test="search !='' and search.equals('content')">
+					AND CONTENT LIKE '%' || #{keyword} || '%'
+				</if>
+				<if test="search !='' and search.equals('faqKwdCode')">
+					AND FAQ_KWD_CODE LIKE '%' || #{keyword} || '%'
+				</if>
+			) t
+			WHERE t.RNUM BETWEEN (#{pageNo} * 5 - 4) AND (#{pageNo} * 5)
+		</select>
+		
+		<select id="selectCount" resultType="int">
+			SELECT COUNT(*)
+            FROM FAQ
+		</select>
+		
+		<insert id="faqInsert" parameterType="kr.or.ddit.common.faq.vo.FaqVO">
+	
+		INSERT INTO GENERAL_NOTICE(ARTC_NUM, EMP_ID, TITLE, CONTENT, WRITE_DATE, FILE_GR_NUM)
+		VALUES 
+		(
+		(SELECT NVL(MAX(ARTC_NUM),0)+1 FROM GENERAL_NOTICE)
+		, #{empId}
+		, #{title}
+		, #{content}
+		, sysdate
+		, #{fileGrNum}
+		)
+		</insert>
+
+</mapper>
